@@ -1,0 +1,18 @@
+{
+  "name": "deearth",
+  "version": "1.0.0",
+  "description": "just like demoon",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "fse": "^4.0.1",
+    "got": "^14.4.6",
+    "toml": "^3.0.0"
+  }
+}
