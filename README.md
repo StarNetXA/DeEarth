@@ -4,7 +4,7 @@
 至于为什么要删除，因为大部分模组都未对Minecraft环境做检测，导致某些应作用在客户端的mixins作用在了服务器上，导致了服务器的崩溃，所以诞生了此项目。
 
 ## 如何使用？
-```bash
+```javascript
 import { DeEarthMain } from "main.js";
 await DeEarthMain(模组文件夹路径,移动后的文件夹路径)
 ```
