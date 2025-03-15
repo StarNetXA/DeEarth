@@ -1,0 +1,2 @@
+# DeEarth
+此开源项目可以让你筛选掉部分Minecraft客户端模组
