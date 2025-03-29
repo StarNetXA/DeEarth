@@ -77,15 +77,17 @@ async function FastGot(url) {
     const fastgot = await pMap(e,async(e)=>{
 try {
     if(e[0] !== null){ //防止URL为空
-        if(isChinaIpAddress((await got.get("https://4.ipw.cn/")).body)){
+        //if(isChinaIpAddress((await got.get("https://4.ipw.cn/")).body)){
     return (await got.get(e[0], { headers: { "User-Agent": "DeEarth" } })).body
-        }else{
-    return (await got.get(`https://mod.mcimirror.top/modrinth/${new URL(e[0]).pathname}`, { headers: { "User-Agent": "DeEarth" } })).body //MCIM源
-        }
+        //}else{
+    //return (await got.get(`https://mod.mcimirror.top/modrinth/${new URL(e[0]).pathname}`, { headers: { "User-Agent": "DeEarth" } })).body //MCIM源
+        //}
     }
 } catch (error) {
     if(error.message !== "Response code 404 (Not Found)"){
         LOGGER.error({err:error})
+    }else{
+        throw new Error(error)
     }
 }
     },{
