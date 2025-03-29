@@ -11,18 +11,23 @@ import toml from 'toml';
 import path from 'path';
 import pMap from "p-map";
 import {pino} from 'pino';
+import { MultiBar } from "cli-progress";
+import ms from 'ms';
 
 export async function DeEarthMain(modspath, movepath) {
     LOGGER.info(`DeEarth V${JSON.parse(fs.readFileSync("./package.json")).version}`)
     const resaddr = fs.readdirSync(modspath)
-    LOGGER.info(`扫描目录完毕，一共${resaddr.length}个jar文件。`)
+    LOGGER.info(`获取目录列表，一共${resaddr.length}个jar文件。`)
+    const totalBar = multibar.create(resaddr.length, 0, {filename: '总文件数'})
     for (let i = 0; i < resaddr.length; i++) {
         const e = `${modspath}/${resaddr[i]}`
         if (e.endsWith(".jar") && fs.statSync(e).isFile()) { //判断是否以.jar结尾并且是文件
             //console.log(e)
             await DeEarth(e, movepath) //使用DeEarth进行审查mod并移动
+            totalBar.increment()
         }
     }
+    multibar.stop()
 }
 
 export async function DeEarth(modpath, movepath) {
@@ -71,7 +76,7 @@ async function FastGot(url) {
     e.push([url])
     const fastgot = await pMap(e,async(e)=>{
 try {
-    LOGGER.info(e[0]) //打印测试
+    //LOGGER.info(e[0]) //打印测试
     if(e[0] !== null){ //防止
     return (await got.get(e[0], { headers: { "User-Agent": "DeEarth" } })).body
     }
@@ -97,5 +102,11 @@ const LOGGER = pino({
             singleLine: true,
           },
         },
+  })
+
+const multibar = new MultiBar({
+    format: ' {bar} | {filename} | {value}/{total}',
+    noTTYOutput: true,
+    notTTYSchedule: ms('10s'),
   })
   
