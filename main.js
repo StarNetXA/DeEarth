@@ -55,9 +55,9 @@ export async function DeEarth(modpath, movepath) {
                 if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith(".refmap.json") && !e.entryName.endsWith("mod.json")) {
                     const resx = JSON.parse(e.getData().toString('utf-8'))
                     if (e.entryName.includes("common.mixins.json")) { //第一步从common mixins文件判断，判断失败后再使用modid.mixins.json进行判断
-                        if (resx.mixins == null || resx.mixins == "[]" && resx.client !== null || resx.client !== "[]") { //CM的判断if (反正对类型没严格要求，判断一下)
-                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                        }
+                         if (resx.mixins == null || resx.mixins == "[]" && resx.client !== null || resx.client !== "[]") { //CM的判断if (反正对类型没严格要求，判断一下)
+                             fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                         }
                     } else {
                         if (resx.client !== null || resx.client !== "[]" && resx.mixins == null || resx.mixins == "[]") { //通过判断mixin来确定是否为客户端模组
                             fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
@@ -76,9 +76,12 @@ async function FastGot(url) {
     e.push([url])
     const fastgot = await pMap(e,async(e)=>{
 try {
-    //LOGGER.info(e[0]) //打印测试
-    if(e[0] !== null){ //防止
+    if(e[0] !== null){ //防止URL为空
+        if(isChinaIpAddress((await got.get("https://4.ipw.cn/")).body)){
     return (await got.get(e[0], { headers: { "User-Agent": "DeEarth" } })).body
+        }else{
+    return (await got.get(`https://mod.mcimirror.top/modrinth/${new URL(e[0]).pathname}`, { headers: { "User-Agent": "DeEarth" } })).body //MCIM源
+        }
     }
 } catch (error) {
     if(error.message !== "Response code 404 (Not Found)"){
@@ -86,7 +89,7 @@ try {
     }
 }
     },{
-        concurrency:32
+        concurrency:48
     })
     return fastgot[0]
 }
@@ -109,4 +112,8 @@ const multibar = new MultiBar({
     noTTYOutput: true,
     notTTYSchedule: ms('10s'),
   })
-  
+
+function isChinaIpAddress(ipAddress) {
+const chinaRegex = /^((?:(?:1(?:0|1|2[0-7]|[3-9][0-9])|2(?:[0-4][0-9]|5[0-5])|[3-9][0-9]{2})\.){3}(?:(?:1(?:0|1|2[0-7]|[3-9][0-9])|2(?:[0-4][0-9]|5[0-5])|[3-9][0-9]{2})))$/;
+return chinaRegex.test(ipAddress);
+}
