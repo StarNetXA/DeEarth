@@ -32,9 +32,11 @@ export async function DeEarthMain(modspath, movepath) {
 
 export async function DeEarth(modpath, movepath) {
     const zip = new AdmZip(modpath).getEntries();
-    for (let i = 0; i < zip.length; i++) {
-        const e = zip[i]
+    //for (let i = 0; i < zip.length; i++) {
+        //const e = zip[i]
         try { //Modrinth
+            for (let i = 0; i < zip.length; i++){
+                const e = zip[i]
             if (e.entryName == "META-INF/mods.toml") { //Forge,NeoForge
                 const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
                 //const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
@@ -50,25 +52,45 @@ export async function DeEarth(modpath, movepath) {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
             }
+        }
         } catch (error) { //从Mixin判断 但是可能为不准确
+            for (let i = 0; i < zip.length; i++){
+                const e = zip[i]
             try {
-                if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith(".refmap.json") && !e.entryName.endsWith("mod.json")) {
+                if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith("refmap.json") && !e.entryName.endsWith("mod.json")) {
+                    LOGGER.info(e.entryName)
                     const resx = JSON.parse(e.getData().toString('utf-8'))
                     if (e.entryName.includes("common.mixins.json")) { //第一步从common mixins文件判断，判断失败后再使用modid.mixins.json进行判断
-                         if (resx.mixins == null || resx.mixins == "[]" && resx.client !== null || resx.client !== "[]") { //CM的判断if (反正对类型没严格要求，判断一下)
+                        //console.log(resx.mixins)
+                        //LOGGER.warn(resx.mixins+"我是傻逼"+typeof resx.mixins)
+                         /*if (resx.mixins == null || resx.mixins == "[]" && resx.client !== null || resx.client !== "[]") { //CM的判断if (反正对类型没严格要求，判断一下)
                              fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                         }
+                         }*/
+                        if(resx.mixins == null || Object.keys(resx.mixins).length == 0){
+                            //LOGGER.error(Object.keys(resx.mixins).length+"你好"+modpath+JSON.stringify(resx))
+                            //LOGGER.warn("客户端模组第一个"+modpath)
+                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        }
                     } else {
-                        if (resx.client !== null || resx.client !== "[]" && resx.mixins == null || resx.mixins == "[]") { //通过判断mixin来确定是否为客户端模组
+                        //LOGGER.warn(resx.mixins+"我是傻逼第二个"+typeof resx.mixins)
+                        //if (resx.client !== null || resx.client !== "[]" && resx.mixins == null || resx.mixins == "[]") { //通过判断mixin来确定是否为客户端模组
+                            //fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        //}
+                        //LOGGER.error(Object.keys(resx.mixins).length+"你好"+modpath+JSON.stringify(resx))
+                        if(resx.mixins == null || Object.keys(resx.mixins).length == 0 ){
+                            //LOGGER.warn("客户端模组"+modpath)
                             fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                         }
                     }
                 }
             } catch (err) {//避免有傻逼JSON写注释（虽然GSON可以这样 但是这样一点也不人道）
+                if(err.errno !==  -4058){
                 LOGGER.error(`大天才JSON写注释了估计，模组路径:${modpath}，过滤失败`)
+                }
             }
         }
-    }
+        }
+    //}
 }
 
 async function FastGot(url) {
