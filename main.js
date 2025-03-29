@@ -1,18 +1,21 @@
 /* Power by.Tianpao
  * 本工具可能会判断失误，但也能为您节省不少时间！
  * DeEarth V2 From StarNet.X
- * Writing in 03.15.2025(latest)
+ * Writing in 03.29.2025(latest)
  * ©2024-2025 
 */
 import AdmZip from "adm-zip";
 import got from "got";
 import fs from "fs";
-import toml from 'toml'
-import path from 'path'
+import toml from 'toml';
+import path from 'path';
 import pMap from "p-map";
+import {pino} from 'pino';
 
 export async function DeEarthMain(modspath, movepath) {
+    LOGGER.info(`DeEarth V${JSON.parse(fs.readFileSync("./package.json")).version}`)
     const resaddr = fs.readdirSync(modspath)
+    LOGGER.info(`扫描目录完毕，一共${resaddr.length}个jar文件。`)
     for (let i = 0; i < resaddr.length; i++) {
         const e = `${modspath}/${resaddr[i]}`
         if (e.endsWith(".jar") && fs.statSync(e).isFile()) { //判断是否以.jar结尾并且是文件
@@ -57,7 +60,7 @@ export async function DeEarth(modpath, movepath) {
                     }
                 }
             } catch (err) {//避免有傻逼JSON写注释（虽然GSON可以这样 但是这样一点也不人道）
-                console.log(`大天才JSON写注释了估计，模组路径:${modpath}，过滤失败`)
+                LOGGER.error(`大天才JSON写注释了估计，模组路径:${modpath}，过滤失败`)
             }
         }
     }
@@ -68,15 +71,31 @@ async function FastGot(url) {
     e.push([url])
     const fastgot = await pMap(e,async(e)=>{
 try {
-    console.log(e[0]) //打印测试
+    LOGGER.info(e[0]) //打印测试
     if(e[0] !== null){ //防止
     return (await got.get(e[0], { headers: { "User-Agent": "DeEarth" } })).body
     }
 } catch (error) {
-    //console.error(error)
+    if(error.message !== "Response code 404 (Not Found)"){
+        LOGGER.error({err:error})
+    }
 }
     },{
         concurrency:32
     })
     return fastgot[0]
 }
+
+const LOGGER = pino({
+    level: process.env.LOGLEVEL || 'info',
+    transport: process.env.PLAIN_LOG
+      ? undefined
+      : {
+          target: 'pino-pretty',
+          options: {
+            translateTime: 'SYS:standard',
+            singleLine: true,
+          },
+        },
+  })
+  
