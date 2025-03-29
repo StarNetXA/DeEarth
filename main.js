@@ -9,6 +9,7 @@ import got from "got";
 import fs from "fs";
 import toml from 'toml'
 import path from 'path'
+import pMap from "p-map";
 
 export async function DeEarthMain(modspath, movepath) {
     const resaddr = fs.readdirSync(modspath)
@@ -28,13 +29,15 @@ export async function DeEarth(modpath, movepath) {
         try { //Modrinth
             if (e.entryName == "META-INF/mods.toml") { //Forge,NeoForge
                 const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
-                const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
+                //const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
+                const body = JSON.parse(await FastGot(`https://api.modrinth.com/v2/project/${modid}`))
                 if (body.client_side == "required" && body.server_side == "unsupported") {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
             } else if (e.entryName == "fabric.mod.json") { //Fabric
                 const modid = JSON.parse(e.getData().toString('utf-8')).id
-                const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
+                //const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
+                const body = JSON.parse(await FastGot(`https://api.modrinth.com/v2/project/${modid}`))
                 if (body.client_side == "required" && body.server_side == "unsupported") {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
@@ -58,4 +61,22 @@ export async function DeEarth(modpath, movepath) {
             }
         }
     }
+}
+
+async function FastGot(url) {
+    let e=[]
+    e.push([url])
+    const fastgot = await pMap(e,async(e)=>{
+try {
+    console.log(e[0]) //打印测试
+    if(e[0] !== null){ //防止
+    return (await got.get(e[0], { headers: { "User-Agent": "DeEarth" } })).body
+    }
+} catch (error) {
+    //console.error(error)
+}
+    },{
+        concurrency:32
+    })
+    return fastgot[0]
 }
