@@ -60,8 +60,11 @@ export async function DeEarth(modpath, movepath) {
                 if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
                     const tr = toml.parse(e.getData().toString('utf-8'))
                     const mcside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "minecraft").side
+                    if (mcside == "CLIENT"){ //从Minecraft判断
+                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                    }
                     const forgeside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "forge").side
-                    if (mcside == "CLIENT" || forgeside == "CLIENT") {
+                    if (forgeside == "CLIENT") { //从Forge判断
                         fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                     }
                 } else if (e.entryName == "fabric.mod.json") { //Fabric
