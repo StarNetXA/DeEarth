@@ -54,66 +54,66 @@ export async function DeEarth(modpath, movepath) {
             }
         }
     } catch (error) {
-        try{ //DeEarthPublic
+        try { //DeEarthPublic
             if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
                 const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
                 const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
-                if(body.isClient){
+                if (body.isClient) {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
-            }else if (e.entryName == "fabric.mod.json"){ //Fabric
-                    const modid = JSON.parse(e.getData().toString('utf-8')).id
-                    const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
-                    if(body.isClient){
-                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                    }
-            }
-        }catch(errorr){ //mods.toml或fabric.mod.json判断
-        for (let i = 0; i < zip.length; i++) {
-            const e = zip[i]
-            try {
-                if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
-                    const tr = toml.parse(e.getData().toString('utf-8'))
-                    const mcside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "minecraft").side
-                    if (mcside == "CLIENT"){ //从Minecraft判断
-                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                    }
-                    const forgeside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "forge").side
-                    if (forgeside == "CLIENT") { //从Forge判断
-                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                    }
-                } else if (e.entryName == "fabric.mod.json") { //Fabric
-                    const fmj = JSON.parse(e.getData().toString('utf-8')).environment
-                    if (fmj == "client") {
-                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                    }
+            } else if (e.entryName == "fabric.mod.json") { //Fabric
+                const modid = JSON.parse(e.getData().toString('utf-8')).id
+                const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
+                if (body.isClient) {
+                    fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
-            } catch (erro) {//从Mixin判断 但是可能为不准确
-                for (let i = 0; i < zip.length; i++) {
-                    const e = zip[i]
-                    try {
-                        if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith("refmap.json") && !e.entryName.endsWith("mod.json")) {
-                            LOGGER.info(e.entryName)
-                            const resx = JSON.parse(e.getData().toString('utf-8'))
-                            if (e.entryName.includes("common.mixins.json")) { //第一步从common mixins文件判断，判断失败后再使用modid.mixins.json进行判断
-                                if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
-                                    fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
-                                }
-                            } else {
-                                if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
-                                    fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+            }
+        } catch (errorr) { //mods.toml或fabric.mod.json判断
+            for (let i = 0; i < zip.length; i++) {
+                const e = zip[i]
+                try {
+                    if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
+                        const tr = toml.parse(e.getData().toString('utf-8'))
+                        const mcside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "minecraft").side
+                        if (mcside == "CLIENT") { //从Minecraft判断
+                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        }
+                        const forgeside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "forge").side
+                        if (forgeside == "CLIENT") { //从Forge判断
+                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        }
+                    } else if (e.entryName == "fabric.mod.json") { //Fabric
+                        const fmj = JSON.parse(e.getData().toString('utf-8')).environment
+                        if (fmj == "client") {
+                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        }
+                    }
+                } catch (erro) {//从Mixin判断 但是可能为不准确
+                    for (let i = 0; i < zip.length; i++) {
+                        const e = zip[i]
+                        try {
+                            if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith("refmap.json") && !e.entryName.endsWith("mod.json")) {
+                                LOGGER.info(e.entryName)
+                                const resx = JSON.parse(e.getData().toString('utf-8'))
+                                if (e.entryName.includes("common.mixins.json")) { //第一步从common mixins文件判断，判断失败后再使用modid.mixins.json进行判断
+                                    if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
+                                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                                    }
+                                } else {
+                                    if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
+                                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                                    }
                                 }
                             }
-                        }
-                    } catch (err) {//避免有傻逼JSON写注释（虽然GSON可以这样 但是这样一点也不人道）
-                        if (err.errno !== -4058) {
-                            LOGGER.error(`大天才JSON写注释了估计，模组路径:${modpath}，过滤失败`)
+                        } catch (err) {//避免有傻逼JSON写注释（虽然GSON可以这样 但是这样一点也不人道）
+                            if (err.errno !== -4058) {
+                                LOGGER.error(`大天才JSON写注释了估计，模组路径:${modpath}，过滤失败`)
+                            }
                         }
                     }
                 }
             }
         }
-    }
     }
     //}
 }
