@@ -55,6 +55,8 @@ export async function DeEarth(modpath, movepath) {
         }
     } catch (error) {
         try { //DeEarthPublic
+            for (let i = 0; i < zip.length; i++) {
+            const e = zip[i]
             if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
                 const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
                 const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
@@ -68,6 +70,7 @@ export async function DeEarth(modpath, movepath) {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
             }
+        }
         } catch (errorr) { //mods.toml或fabric.mod.json判断
             for (let i = 0; i < zip.length; i++) {
                 const e = zip[i]
