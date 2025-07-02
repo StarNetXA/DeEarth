@@ -1,7 +1,7 @@
 /* Power by.Tianpao
  * 本工具可能会判断失误，但也能为您节省不少时间！
  * DeEarth V2 From StarNet.X
- * Writing in 03.29.2025(latest)
+ * Writing in 07.02.2025(latest)
  * ©2024-2025 
 */
 import AdmZip from "adm-zip";
@@ -53,7 +53,22 @@ export async function DeEarth(modpath, movepath) {
                 }
             }
         }
-    } catch (error) { //mods.toml或fabric.mod.json判断
+    } catch (error) {
+        try{ //DeEarthPublic
+            if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
+                const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
+                const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
+                if(body.isClient){
+                    fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                }
+            }else if (e.entryName == "fabric.mod.json"){ //Fabric
+                    const modid = JSON.parse(e.getData().toString('utf-8')).id
+                    const body = JSON.parse(FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
+                    if(body.isClient){
+                        fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                    }
+            }
+        }catch(errorr){ //mods.toml或fabric.mod.json判断
         for (let i = 0; i < zip.length; i++) {
             const e = zip[i]
             try {
@@ -98,6 +113,7 @@ export async function DeEarth(modpath, movepath) {
                 }
             }
         }
+    }
     }
     //}
 }
