@@ -8,4 +8,11 @@
 import { DeEarthMain } from "main.js";
 await DeEarthMain(模组文件夹路径,移动后的文件夹路径)
 ```
+
+## 处理优先级
+1.Mondrinth
+2.DeEarthPublic
+3.MODINFO
+4.MIXININFO
+
 ©2023-2025 StarNet.X
