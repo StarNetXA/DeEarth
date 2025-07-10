@@ -37,18 +37,20 @@ export async function DeEarth(modpath, movepath) {
     try { //Modrinth
         for (let i = 0; i < zip.length; i++) {
             const e = zip[i]
-            if (e.entryName == "META-INF/mods.toml") { //Forge,NeoForge
+            if (isForge(e.entryName)) { //Forge,NeoForge
+                //console.log(toml.parse(e.getData().toString('utf-8')).mods[0].modId)
                 const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
+                console.log(modid)
                 //const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
                 const body = JSON.parse(await FastGot(`https://api.modrinth.com/v2/project/${modid}`))
-                if (body.client_side == "required" && body.server_side == "unsupported") {
+                if (body.client_side == "required" && body.server_side !== "required") {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
             } else if (e.entryName == "fabric.mod.json") { //Fabric
                 const modid = JSON.parse(e.getData().toString('utf-8')).id
                 //const body = await got.get(`https://api.modrinth.com/v2/project/${modid}`, { headers: { "User-Agent": "DeEarth" } }).json()
                 const body = JSON.parse(await FastGot(`https://api.modrinth.com/v2/project/${modid}`))
-                if (body.client_side == "required" && body.server_side == "unsupported") {
+                if (body.client_side == "required" && body.server_side !== "required") {
                     fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                 }
             }
@@ -57,7 +59,7 @@ export async function DeEarth(modpath, movepath) {
         try { //DeEarthPublic
             for (let i = 0; i < zip.length; i++) {
                 const e = zip[i]
-                if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
+                if (isForge(e.entryName)) { //Forge,Neoforge
                     const modid = toml.parse(e.getData().toString('utf-8')).mods[0].modId
                     const body = JSON.parse(await FastGot(`https://dearth.0771010.xyz/api/modid?modid=${modid}`))
                     if (body.isClient) {
@@ -75,7 +77,7 @@ export async function DeEarth(modpath, movepath) {
             for (let i = 0; i < zip.length; i++) {
                 const e = zip[i]
                 try {
-                    if (e.entryName == "META-INF/mods.toml") { //Forge,Neoforge
+                    if (isForge(e.entryName)) { //Forge,Neoforge
                         const tr = toml.parse(e.getData().toString('utf-8'))
                         const mcside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "minecraft").side
                         if (mcside == "CLIENT") { //从Minecraft判断
@@ -83,6 +85,10 @@ export async function DeEarth(modpath, movepath) {
                         }
                         const forgeside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "forge").side
                         if (forgeside == "CLIENT") { //从Forge判断
+                            fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
+                        }
+                        const neoside = tr.dependencies[tr.mods[0].modId].find(mod => mod.modId === "neoforge").side
+                        if (neoside == "CLIENT") { //从NeoForge判断
                             fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                         }
                     } else if (e.entryName == "fabric.mod.json") { //Fabric
@@ -95,15 +101,15 @@ export async function DeEarth(modpath, movepath) {
                     for (let i = 0; i < zip.length; i++) {
                         const e = zip[i]
                         try {
-                            if (!e.entryName.includes("/") && e.entryName.endsWith(".json") && !e.entryName.endsWith("refmap.json") && !e.entryName.endsWith("mod.json")) {
+                            if (isMixinFile(e.entryName)) {
                                 LOGGER.info(e.entryName)
                                 const resx = JSON.parse(e.getData().toString('utf-8'))
                                 if (e.entryName.includes("common.mixins.json")) { //第一步从common mixins文件判断，判断失败后再使用modid.mixins.json进行判断
-                                    if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
+                                    if (isMixin(resx)) {
                                         fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                                     }
                                 } else {
-                                    if (resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0) {
+                                    if (isMixin(resx)) {
                                         fs.renameSync(modpath, `${movepath}/${path.basename(modpath)}`)
                                     }
                                 }
@@ -158,6 +164,18 @@ const LOGGER = pino({
             },
         },
 })
+
+function isMixin(resx){
+    return resx.mixins == null || Object.keys(resx.mixins).length == 0 && Object.keys(resx.client).length !== 0
+}
+
+function isForge(name){
+    return name.includes("mods.toml")&&name.includes("META-INF")
+}
+
+function isMixinFile(name){
+    return !name.includes("/") && name.endsWith(".json") && !name.endsWith("refmap.json") && !name.endsWith("mod.json")
+}
 
 const multibar = new MultiBar({
     format: ' {bar} | {filename} | {value}/{total}',
