@@ -16,6 +16,8 @@ import ms from 'ms';
 
 export async function DeEarthMain(modspath, movepath) {
     LOGGER.info(`DeEarth V${JSON.parse(fs.readFileSync("./package.json")).version}`)
+    LOGGER.info(`如有无法筛选的mods，请前往 https://dearth.0771010.xyz/ 提交未成功筛选的模组的modid`)
+    LOGGER.info(`Probejs 7.0.0以上版本为非客户端mod，如rubbish中有请自行添加回去`)
     const resaddr = fs.readdirSync(modspath)
     LOGGER.info(`获取目录列表，一共${resaddr.length}个jar文件。`)
     const totalBar = multibar.create(resaddr.length, 0, { filename: '总文件数' })
