@@ -1,7 +1,7 @@
 /* Power by.Tianpao
  * 本工具可能会判断失误，但也能为您节省不少时间！
  * DeEarth V2 From StarNet.X
- * Writing in 07.02.2025(latest)
+ * Writing in 07.10.2025(latest)
  * ©2024-2025 
 */
 import AdmZip from "adm-zip";
